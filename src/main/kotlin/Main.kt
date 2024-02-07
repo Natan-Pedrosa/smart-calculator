@@ -17,7 +17,7 @@ fun main() {
         }
 
 
-        if(input.contains("exit")){
+        if(input.contains("/exit")){
             println("Bye!")
             break
         }
