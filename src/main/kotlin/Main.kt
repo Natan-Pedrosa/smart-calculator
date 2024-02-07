@@ -1,11 +1,32 @@
 package org.example
+class Calculator{
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-fun main() {
+    fun sum(numberOne: Int = 0, numberTwo: Int = 0) =  numberOne + numberTwo
 
-    val (numberOne, numberTwo) = readln().split(" ").map{ it.toInt() }
-
-    println(sum(numberOne, numberTwo))
 }
-fun sum(valueOne: Int, valueTwo: Int) = valueOne + valueTwo
+
+fun main() {
+    val calculator = Calculator()
+
+    while (true){
+        val input = readln().split(" ")
+
+        if (input.contains("")){
+
+            continue
+        }
+
+
+        if(input.contains("exit")){
+            println("Bye!")
+            break
+        }
+
+        val numbers = input.map { it.toInt() }
+
+        when(numbers.size){
+            1 -> println(calculator.sum(numbers[0]))
+            2 -> println(calculator.sum(numbers[0], numbers[1]))
+        }
+    }
+}
