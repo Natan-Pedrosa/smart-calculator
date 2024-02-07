@@ -22,12 +22,12 @@ fun main() {
 
         when{
             input.isBlank() -> continue
-            input == "/exit" -> break
-            input == "/help" -> println("The program calculates the sum of numbers")
+            input.contains("/help")  -> println("The program calculates the sum of numbers")
+            input.contains("/exit") -> break
             else -> {
                 val values = input.split(" ").map { it.toInt() }
 
-                calculator.sum(values)
+                println(calculator.sum(values))
             }
         }
     }
