@@ -6,6 +6,6 @@ fun main() {
 
     val (numberOne, numberTwo) = readln().split(" ").map{ it.toInt() }
 
-    println(sum(numberOne.toInt(), numberTwo.toInt()))
+    println(sum(numberOne, numberTwo))
 }
 fun sum(valueOne: Int, valueTwo: Int) = valueOne + valueTwo
