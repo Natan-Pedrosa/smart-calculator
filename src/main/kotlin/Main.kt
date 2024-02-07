@@ -4,7 +4,7 @@ package org.example
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 fun main() {
 
-    val (numberOne, numberTwo) = readln().split(" ")
+    val (numberOne, numberTwo) = readln().split(" ").map{ it.toInt() }
 
     println(sum(numberOne.toInt(), numberTwo.toInt()))
 }
