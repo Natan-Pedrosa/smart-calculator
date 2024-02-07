@@ -1,7 +1,16 @@
 package org.example
 class Calculator{
 
-    fun sum(numberOne: Int = 0, numberTwo: Int = 0) =  numberOne + numberTwo
+    fun sum(values: List<Int>): Int{
+        var result = 0
+
+        for (value in values){
+
+            result += value
+        }
+
+        return result
+    }
 
 }
 
@@ -9,24 +18,19 @@ fun main() {
     val calculator = Calculator()
 
     while (true){
-        val input = readln().split(" ")
+        val input = readln()
 
-        if (input.contains("")){
+        when{
+            input.isBlank() -> continue
+            input == "/exit" -> break
+            input == "/help" -> println("The program calculates the sum of numbers")
+            else -> {
+                val values = input.split(" ").map { it.toInt() }
 
-            continue
-        }
-
-
-        if(input.contains("/exit")){
-            println("Bye!")
-            break
-        }
-
-        val numbers = input.map { it.toInt() }
-
-        when(numbers.size){
-            1 -> println(calculator.sum(numbers[0]))
-            2 -> println(calculator.sum(numbers[0], numbers[1]))
+                calculator.sum(values)
+            }
         }
     }
+
+    println("Bye!")
 }
