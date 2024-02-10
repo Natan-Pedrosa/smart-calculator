@@ -1,4 +1,4 @@
-package org.example
+
 class Calculator{
 
     fun sum(vararg values: Int): Int{
@@ -13,27 +13,29 @@ class Calculator{
     }
 
     fun subtract(vararg values: Int): Int {
-        var result = 0
+        var result = values[0]
 
-        for (value in values){
+        for (index in 1 .. values.lastIndex){
+            val prev = result
+            val next = values[index]
 
-            result -= value
+            result = prev - next
         }
 
         return result
     }
 
-    fun definePlusOrMinus(symbols: List<String>): String{
+    fun definePlusOrMinus(symbols: String): String{
         var result = ""
 
         if (symbols.isEmpty())
             return result
 
-        result = symbols[0]
+        result = symbols[0].toString()
 
         for (index in 1 .. symbols.lastIndex){
             val prev = result
-            val next = symbols[index]
+            val next = symbols[index].toString()
 
             val tempResult = prev + next
             result = when (tempResult) {
@@ -58,35 +60,40 @@ fun main() {
 
         when{
             input.isBlank() -> continue
-            input.contains("/help")  -> println("The program calculates the sum of numbers")
+            input.contains("/help")  -> println("The program calculates the sum  and subtraction of numbers. " +
+                    "Also support unary and binary plus/minus operator")
             input.contains("/exit") -> break
+            input.contains("/") -> println("Unknown command")
             else -> {
-                val values = input.split(" ")
+                val values = input.split(" ").filter { it != "" }
 
                 if(values.size == 1) {
-                    println(values[0])
-                    continue
+                  when{
+                      input[0] == '+' -> println(input.subSequence(1, input.length))
+                      !input[input.length - 1].isDigit() -> println("Invalid expression")
+                      else -> println(input)
+                  }
+                  continue
                 }
 
-                var result = 0
+                try {
+                    var result = values[0].toInt()
 
-                for (index in 1 .. values.lastIndex step 2){
-                    val prev = result
-                    val next = values[index + 1].toInt()
-                    val symbol = values[index]
+                    for (index in 1..values.lastIndex step 2) {
+                        val prev = result
+                        val symbol = calculator.definePlusOrMinus(values[index])
+                        val next = values[index + 1].toInt()
 
-                    val numberPlus = symbol.filter { it == '+' }.length
-                    val numberMinus = symbol.filter { it == '-' }.length
-
-                    val isPlus = numberPlus >= numberMinus
-
-                    result = when{
-                        isPlus -> calculator.sum(prev, next)
-                        else -> calculator.subtract(prev, next)
+                        result = when {
+                            symbol == "+" -> calculator.sum(prev, next)
+                            else -> calculator.subtract(prev, next)
+                        }
                     }
-                }
 
-                println(result)
+                    println(result)
+                } catch (e: Exception){
+                    println("Invalid expression")
+                }
             }
         }
     }
