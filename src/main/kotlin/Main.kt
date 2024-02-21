@@ -1,11 +1,12 @@
-import kotlin.math.pow
+
+import java.math.BigInteger
 
 class Calculator{
 
-    val memory = mutableMapOf<String, Int>()
+    val memory = mutableMapOf<String, BigInteger>()
 
-    fun sum(vararg values: Int): Int{
-        var result = 0
+    private fun sum(vararg values: BigInteger): BigInteger{
+        var result = BigInteger.ZERO
 
         for (value in values){
 
@@ -15,7 +16,7 @@ class Calculator{
         return result
     }
 
-    fun subtract(vararg values: Int): Int {
+    private fun subtract(vararg values: BigInteger): BigInteger {
         var result = values[0]
 
         for (index in 1 .. values.lastIndex){
@@ -24,7 +25,6 @@ class Calculator{
 
             result = prev - next
         }
-
         return result
     }
 
@@ -42,32 +42,30 @@ class Calculator{
             symbols matches regexDivision -> "ERRO"
             else -> symbols
         }
-
     }
 
-
-   private fun operation(firstValue: Int, secondValue: Int, operator: String): Int{
+    private fun operation(firstValue: BigInteger, secondValue: BigInteger, operator: String): BigInteger{
         return when(operator){
             "+" -> sum(secondValue, firstValue)
             "-" -> subtract(secondValue, firstValue)
             "*" -> firstValue * secondValue
             "/" -> secondValue / firstValue
-            "^" -> secondValue.toDouble().pow(firstValue.toDouble()).toInt()
-            else -> 0
+            "^" -> secondValue.pow(firstValue.toInt())
+            else -> BigInteger.ZERO
         }
     }
 
-    fun calculatePostFixExpression(expressionPostFix: List<String>): Int{
+    fun calculatePostFixExpression(expressionPostFix: List<String>): BigInteger{
         if(expressionPostFix.contains("(") || expressionPostFix.contains(")"))
             throw Exception()
 
-        val stack = mutableListOf<Int>()
+        val stack = mutableListOf<BigInteger>()
         val operators = listOf("/", "*", "^", "+", "-")
 
         for (value in expressionPostFix){
             when{
-                value.toIntOrNull() != null -> stack.add(value.toInt())
-                memory.containsKey(value) -> stack.add(memory[value]!!.toInt())
+                value.toBigIntegerOrNull() != null -> stack.add(value.toBigInteger())
+                memory.containsKey(value) -> stack.add(memory[value]!!)
                 value in operators -> {
                     val firstValue = stack.removeLast()
                     val secondValue = stack.removeLast()
@@ -116,7 +114,7 @@ class Calculator{
 }
 
 fun isDigit(value: String): Boolean{
-    return value.toIntOrNull() != null
+    return value.toBigIntegerOrNull() != null
 }
 
 fun main() {
@@ -148,7 +146,7 @@ fun main() {
                 }
 
                 if(isDigit(value))
-                    calculator.memory[key] = value.toInt()
+                    calculator.memory[key] = value.toBigInteger()
                 else{
                     if(isNoBasicLatinLetter(value)) {
                         println("Invalid identifier")
@@ -156,17 +154,16 @@ fun main() {
                     }
 
                     if(calculator.memory.contains(value))
-                            calculator.memory[key] = calculator.memory.getOrDefault(value, 0)
-                        else
-                            println("Unknown variable")
-                    }
+                        calculator.memory[key] = calculator.memory[value] ?: BigInteger.ZERO
+                    else
+                        println("Unknown variable")
+                }
             }
             else -> {
                 if(input[0] == '/'){
                     println("Unknown command")
                     continue
                 }
-
 
                 val values = getExpression(input)
 
@@ -177,23 +174,23 @@ fun main() {
 
                 if(values.size == 1) {
                     input = input.trim()
-                  when{
-                      input.any{ it.isLetter()} -> {
-                          if (isNoBasicLatinLetter(input)){
-                              println("Invalid identifier")
-                              continue
-                          }
+                    when{
+                        input.any{ it.isLetter()} -> {
+                            if (isNoBasicLatinLetter(input)){
+                                println("Invalid identifier")
+                                continue
+                            }
 
-                          if(calculator.memory.contains(input))
-                              println(calculator.memory[input])
-                          else
-                              println("Unknown variable")
-                      }
-                      input[0] == '+' -> println(input.subSequence(1, input.length))
-                      !input[input.length - 1].isDigit() -> println("Invalid expression")
-                      else -> println(input)
-                  }
-                  continue
+                            if(calculator.memory.contains(input))
+                                println(calculator.memory[input])
+                            else
+                                println("Unknown variable")
+                        }
+                        input[0] == '+' -> println(input.subSequence(1, input.length))
+                        !input[input.length - 1].isDigit() -> println("Invalid expression")
+                        else -> println(input)
+                    }
+                    continue
                 }
 
 
