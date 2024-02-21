@@ -28,32 +28,25 @@ class Calculator{
         return result
     }
 
-    fun definePlusOrMinus(symbols: String): String{
-        var result = ""
+    fun defineOperatorInSequence(symbols: String): String{
 
-        if (symbols.isEmpty())
-            return result
+        val regexPlus = "\\++".toRegex()
+        val regexMinus = "-+".toRegex()
+        val regexMultiple = "\\*{2,}".toRegex()
+        val regexDivision = "/{2,}}".toRegex()
 
-        result = symbols[0].toString()
-
-        for (index in 1 .. symbols.lastIndex){
-            val prev = result
-            val next = symbols[index].toString()
-
-            val tempResult = prev + next
-            result = when (tempResult) {
-                "++" -> "+"
-                "-+" -> "-"
-                "+-" -> "-"
-                "--" -> "+"
-                else -> ""
-            }
+        return when{
+            symbols matches regexPlus -> "+"
+            symbols matches regexMinus -> if(symbols.length % 2 == 0) "+" else "-"
+            symbols matches regexMultiple -> "ERRO"
+            symbols matches regexDivision -> "ERRO"
+            else -> symbols
         }
 
-        return result
     }
 
-    fun operation(firstValue: Int, secondValue: Int, operator: String): Int{
+
+   private fun operation(firstValue: Int, secondValue: Int, operator: String): Int{
         return when(operator){
             "+" -> sum(secondValue, firstValue)
             "-" -> subtract(secondValue, firstValue)
@@ -65,6 +58,9 @@ class Calculator{
     }
 
     fun calculatePostFixExpression(expressionPostFix: List<String>): Int{
+        if(expressionPostFix.contains("(") || expressionPostFix.contains(")"))
+            throw Exception()
+
         val stack = mutableListOf<Int>()
         val operators = listOf("/", "*", "^", "+", "-")
 
@@ -84,6 +80,39 @@ class Calculator{
 
         return stack.last()
     }
+
+    fun convertInFixToPostFixExpression(expression: List<String>): MutableList<String>{
+        val stack = mutableListOf<String>()
+        val postFixExpression = mutableListOf<String>()
+
+        for(value in expression){
+            when{
+                value == "(" -> stack.add(value)
+                value == ")" -> {
+                    while (stack.isNotEmpty() && stack.last() != "(") {
+                        postFixExpression.add(stack.removeLast())
+                    }
+
+                    stack.removeLast()
+                }
+                isDigitOrVariable(value) -> postFixExpression.add(value)
+                stack.isEmpty() || stack.last() == "(" -> stack.add(value)
+                isIncomingOperatorWithHigherPrecedence(value, stack.last()) -> stack.add(value)
+                value == stack.last() || !isIncomingOperatorWithHigherPrecedence(value, stack.last()) ->{
+                    while(stack.isNotEmpty() && stack.last() != "(" && !isIncomingOperatorWithHigherPrecedence(value, stack.last()) ){
+                        postFixExpression.add(stack.removeLast())
+                    }
+
+                    stack.add(value)
+                }
+            }
+        }
+
+        while (stack.isNotEmpty())
+            postFixExpression.add(stack.removeLast())
+
+        return postFixExpression
+    }
 }
 
 fun isDigit(value: String): Boolean{
@@ -94,14 +123,13 @@ fun main() {
     val calculator = Calculator()
 
     while (true){
-        val input = readln()
+        var input = readln()
 
         when{
             input.isBlank() -> continue
             input.contains("/help")  -> println("The program calculates the sum  and subtraction of numbers. " +
                     "Also support unary and binary plus/minus operator")
             input.contains("/exit") -> break
-            input.contains("/") -> println("Unknown command")
             input.contains("=") -> {
 
                 val array = input.filter{it != ' '}.split("=")
@@ -134,9 +162,21 @@ fun main() {
                     }
             }
             else -> {
-                val values = input.split(" ").filter { it != "" }
+                if(input[0] == '/'){
+                    println("Unknown command")
+                    continue
+                }
+
+
+                val values = getExpression(input)
+
+                if(values.contains("ERRO")){
+                    println("Invalid expression")
+                    continue
+                }
 
                 if(values.size == 1) {
+                    input = input.trim()
                   when{
                       input.any{ it.isLetter()} -> {
                           if (isNoBasicLatinLetter(input)){
@@ -156,9 +196,14 @@ fun main() {
                   continue
                 }
 
-                try {
 
-                    val postFixExpression = convertInFixToPostFixExpression(values)
+                try {
+                    values.map{
+                        if( it[0] in "/*-+")
+                            calculator.defineOperatorInSequence(it)
+                    }
+
+                    val postFixExpression = calculator.convertInFixToPostFixExpression(values)
 
                     println(calculator.calculatePostFixExpression(postFixExpression))
                 } catch (e: Exception){
@@ -188,29 +233,38 @@ fun isIncomingOperatorWithHigherPrecedence(incomingOperator: String, topStackOpe
         else ->  false
     }
 }
-fun convertInFixToPostFixExpression(expression: List<String>): MutableList<String>{
-    val stack = mutableListOf<String>()
-    val postFixExpression = mutableListOf<String>()
 
-    for(value in expression){
+fun getExpression(expression: String): List<String>{
+
+    var newExpression = expression.replace("--".toRegex(), "+")
+    newExpression = newExpression.replace("\\++".toRegex(), "+")
+    newExpression = newExpression.replace("\\+-".toRegex(), "-")
+    newExpression = newExpression.replace("\\*[2,]".toRegex(), "ERRO")
+    newExpression = newExpression.replace("/[2,]".toRegex(), "ERRO")
+
+    val tempValues = newExpression.split("").filter { it != " " && it != "" }
+
+    val values = mutableListOf<String>()
+    var tempValue = ""
+
+    for(value in tempValues){
         when{
-            isDigitOrVariable(value) -> postFixExpression.add(value)
-            stack.isEmpty() || stack.last() == "(" -> stack.add(value)
-            isIncomingOperatorWithHigherPrecedence(value, stack.last()) -> stack.add(value)
-            value == stack.last() || !isIncomingOperatorWithHigherPrecedence(value, stack.last()) ->
-                postFixExpression.add(stack.removeLast())
-            value == "(" -> stack.add(value)
-            value == ")" -> {
-                while (stack.last() != "(") {
-                    postFixExpression.add(stack.removeLast())
-                }
-                stack.removeLast()
+            value in "*/+-^()" -> {
+
+                if (tempValue != "")
+                    values.add(tempValue)
+
+                values.add(value)
+
+                tempValue = ""
             }
+            else -> tempValue += value
         }
     }
 
-    while (stack.isNotEmpty())
-        postFixExpression.add(stack.removeLast())
+    if(tempValue.isNotEmpty())
+        values.add(tempValue)
 
-    return postFixExpression
+    return values.toList()
 }
+
